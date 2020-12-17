@@ -1,9 +1,30 @@
 const db = require("../../data/dbConfig");
 
 const getAccounts = async (req, res) => {
-  const results = await db("accounts").select("*");
+  if (Object.keys(req.query).length !== 0) {
+    /**
+     * Expected queries
+     * id
+     * orderBy = "column,[asc||desc]",
+     * limit
+     */
+    const { id, orderBy, limit } = req.query;
+    let requestedCall = db("accounts").select("*");
 
-  return res.status(200).json(results);
+    id ? (requestedCall = requestedCall.where({ id })) : null;
+    if (orderBy) {
+      const [column, func] = orderBy.split(",");
+      requestedCall = requestedCall.orderBy(column, func);
+    }
+    limit ? (requestedCall = requestedCall.limit(limit)) : null;
+
+    const results = await requestedCall;
+
+    return res.status(200).json(results);
+  } else {
+    let results = await db("accounts").select("*");
+    return res.status(200).json(results);
+  }
 };
 
 const createAccount = async (req, res) => {
